@@ -32,7 +32,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
-#include "esp32_can.h"
 #include <WiFi.h>
 #include <Preferences.h>
 
@@ -109,8 +108,16 @@ struct SystemSettings {
     boolean isWifiActive;
 };
 
+class GVRET_Comm_Handler;
+class SerialConsole;
+class CANManager;
+
 extern EEPROMSettings settings;
 extern SystemSettings SysSettings;
 extern Preferences nvPrefs;
+extern GVRET_Comm_Handler serialGVRET;
+extern GVRET_Comm_Handler wifiGVRET;
+extern SerialConsole console;
+extern CANManager canManager;
 
 #endif /* CONFIG_H_ */
