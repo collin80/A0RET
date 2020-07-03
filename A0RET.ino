@@ -75,6 +75,7 @@ void loadSettings()
     settings.useBinarySerialComm = nvPrefs.getBool("binarycomm", false);
     settings.logLevel = nvPrefs.getUChar("loglevel", 1); //info
     settings.wifiMode = nvPrefs.getUChar("wifiMode", 0); //Wifi defaults to being off
+    settings.enableBT = nvPrefs.getBool("enable-bt", false);
     if (nvPrefs.getString("SSID", settings.SSID, 32) == 0)
     {
         strcpy(settings.SSID, "ESP32DUE");
@@ -83,6 +84,10 @@ void loadSettings()
     if (nvPrefs.getString("wpa2Key", settings.WPA2Key, 64) == 0)
     {
         strcpy(settings.WPA2Key, "aBigSecret");
+    }
+    if (nvPrefs.getString("btname", settings.btName, 32) == 0)
+    {
+        strcpy(settings.btName, "ELM327-A0");
     }
 
     nvPrefs.end();
@@ -111,13 +116,28 @@ void setup()
 {
     //delay(5000); //just for testing. Don't use in production
 
-    Serial.begin(1000000);
+    Serial.begin(1000000); //for production
+    //Serial.begin(115200); //for testing
 
     SysSettings.isWifiConnected = false;
 
     loadSettings();
 
+    //If you enable PSRAM then BluetoothSerial will kill everything via a heap error. These calls
+    //try to debug that. But, no dice yet. :(
+    //heap_caps_print_heap_info(MALLOC_CAP_8BIT);
+
     wifiManager.setup();
+
+    //heap_caps_print_heap_info(MALLOC_CAP_8BIT);
+
+    if (settings.enableBT) 
+    {
+        Serial.println("Starting bluetooth");
+        elmEmulator.setup();
+    }
+
+    //heap_caps_print_heap_info(MALLOC_CAP_8BIT);
 
     Serial.print("Build number: ");
     Serial.println(CFG_BUILD_NUM);
@@ -137,6 +157,8 @@ void setup()
     {
         CAN0.disable();
     }
+
+    //heap_caps_print_heap_info(MALLOC_CAP_8BIT);
 
     setPromiscuousMode();
 
@@ -224,6 +246,5 @@ void loop()
         serialGVRET.processIncomingByte(in_byte);
     }
 
-    //elmEmulator.loop();
-    
+    if (settings.enableBT) elmEmulator.loop();
 }

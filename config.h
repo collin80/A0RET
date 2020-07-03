@@ -83,6 +83,9 @@ struct EEPROMSettings {
     uint8_t logLevel; //Level of logging to output on serial line
     boolean CAN0ListenOnly; //if true we don't allow any messing with the bus but rather just passively monitor.
 
+    boolean enableBT; //are we enabling bluetooth too?
+    char btName[32];
+
     //if we're using WiFi then output to serial is disabled (it's far too slow to keep up)  
     uint8_t wifiMode; //0 = don't use wifi, 1 = connect to an AP, 2 = Create an AP
     char SSID[32];     //null terminated string for the SSID

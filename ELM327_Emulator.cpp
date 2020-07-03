@@ -31,19 +31,15 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include "ELM327_Emulator.h"
+#include "BluetoothSerial.h"
+#include "config.h"
+#include "Logger.h"
 
 /*
- * Constructor. Assign serial interface to use for comm with bluetooth adapter we're emulating with
+ * Constructor. Nothing at the moment
  */
 ELM327Emu::ELM327Emu() {
-    serialInterface = &Serial;
-}
-
-/*
- * Constructor. Pass serial interface to use
- */
-ELM327Emu::ELM327Emu(HardwareSerial *which) {
-    serialInterface = which;
+    
 }
 
 /*
@@ -53,16 +49,16 @@ void ELM327Emu::setup() {
 
     tickCounter = 0;
     ibWritePtr = 0;
-    serialInterface->begin(115200);
+    serialBT.begin(settings.btName);
 }
 
 /*
  * Send a command to ichip. The "AT+i" part will be added.
  */
 void ELM327Emu::sendCmd(String cmd) {
-    serialInterface->write("AT");
-    serialInterface->print(cmd);
-    serialInterface->write(13);
+    serialBT.print("AT");
+    serialBT.print(cmd);
+    serialBT.write(13);
     loop(); // parse the response
 }
 
@@ -75,8 +71,8 @@ void ELM327Emu::sendCmd(String cmd) {
 
 void ELM327Emu::loop() {
     int incoming;
-    while (serialInterface->available()) {
-        incoming = serialInterface->read();
+    while (serialBT.available()) {
+        incoming = serialBT.read();
         if (incoming != -1) { //and there is no reason it should be -1
             if (incoming == 13 || ibWritePtr > 126) { // on CR or full buffer, process the line
                 incomingBuffer[ibWritePtr] = 0; //null terminate the string
@@ -102,7 +98,7 @@ void ELM327Emu::loop() {
 void ELM327Emu::processCmd() {
     String retString = processELMCmd(incomingBuffer);
 
-    serialInterface->print(retString);
+    serialBT.print(retString);
     if (Logger::isDebug()) {
         char buff[30];
         retString.toCharArray(buff, 30);

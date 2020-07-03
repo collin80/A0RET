@@ -88,6 +88,10 @@ void SerialConsole::printMenu()
     Logger::console("BINSERIAL=%i - Enable/Disable Binary Sending of CANBus Frames to Serial (0=Dis, 1=En)", settings.useBinarySerialComm);
     Serial.println();
 
+    Logger::console("BTMODE=%i - Set mode for Bluetooth (0 = Off, 1 = On)", settings.enableBT);
+    Logger::console("BTNAME=%s - Set advertised Bluetooth name", settings.btName);
+    Serial.println();
+
     Logger::console("WIFIMODE=%i - Set mode for WiFi (0 = Wifi Off, 1 = Connect to AP, 2 = Create AP", settings.wifiMode);
     Logger::console("SSID=%s - Set SSID to either connect to or create", (char *)settings.SSID);
     Logger::console("WPA2KEY=%s - Either passphrase or actual key", (char *)settings.WPA2Key);
@@ -463,6 +467,12 @@ void SerialConsole::handleConfigCmd()
         Logger::console("Setting Serial Binary Comm to %i", newValue);
         settings.useBinarySerialComm = newValue;
         writeEEPROM = true;
+    } else if (cmdString == String("BTMODE")) {
+        if (newValue < 0) newValue = 0;
+        if (newValue > 1) newValue = 1;
+        Logger::console("Setting Bluetooth Mode to %i", newValue);
+        settings.enableBT = newValue;
+        writeEEPROM = true;
     } else if (cmdString == String("WIFIMODE")) {
         if (newValue < 0) newValue = 0;
         if (newValue > 2) newValue = 2;
@@ -470,6 +480,10 @@ void SerialConsole::handleConfigCmd()
         if (newValue == 1) Logger::console("Setting Wifi Mode to Connect to AP");
         if (newValue == 2) Logger::console("Setting Wifi Mode to Create AP");
         settings.wifiMode = newValue;
+        writeEEPROM = true;
+    } else if (cmdString == String("BTNAME")) {
+        Logger::console("Setting Bluetooth Name to %s", newString);
+        strcpy((char *)settings.btName, newString);
         writeEEPROM = true;
     } else if (cmdString == String("SSID")) {
         Logger::console("Setting SSID to %s", newString);
@@ -522,10 +536,12 @@ void SerialConsole::handleConfigCmd()
         nvPrefs.putBool("can0_en", settings.CAN0_Enabled);
         nvPrefs.putBool("can0-listenonly", settings.CAN0ListenOnly);
         nvPrefs.putBool("binarycomm", settings.useBinarySerialComm);
+        nvPrefs.putBool("enable-bt", settings.enableBT);
         nvPrefs.putUChar("loglevel", settings.logLevel);
         nvPrefs.putUChar("wifiMode", settings.wifiMode);
         nvPrefs.putString("SSID", settings.SSID);
         nvPrefs.putString("wpa2Key", settings.WPA2Key);
+        nvPrefs.putString("btname", settings.btName);
         nvPrefs.end();
     }
 } 
