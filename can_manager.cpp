@@ -37,46 +37,12 @@ void CANManager::sendFrame(CAN_COMMON *bus, CAN_FRAME &frame)
 
 void CANManager::outputFrame(CAN_FRAME &frame, int whichBus)
 {
-    uint8_t buff[40];
-    uint8_t writtenBytes;
-    uint8_t temp;
-    uint32_t now = micros();
-
-    if (SysSettings.lawicelMode) {
-        if (SysSettings.lawicellExtendedMode) {
-            Serial.print(micros());
-            Serial.print(" - ");
-            Serial.print(frame.id, HEX);            
-            if (frame.extended) Serial.print(" X ");
-            else Serial.print(" S ");
-            console.printBusName(whichBus);
-            for (int d = 0; d < frame.length; d++) {
-                Serial.print(" ");
-                Serial.print(frame.data.uint8[d], HEX);
-            }
-        }else {
-            if (frame.extended) {
-                Serial.print("T");
-                sprintf((char *)buff, "%08x", frame.id);
-                Serial.print((char *)buff);
-            } else {
-                Serial.print("t");
-                sprintf((char *)buff, "%03x", frame.id);
-                Serial.print((char *)buff);
-            }
-            Serial.print(frame.length);
-            for (int i = 0; i < frame.length; i++) {
-                sprintf((char *)buff, "%02x", frame.data.uint8[i]);
-                Serial.print((char *)buff);
-            }
-            if (SysSettings.lawicelTimestamping) {
-                uint16_t timestamp = (uint16_t)millis();
-                sprintf((char *)buff, "%04x", timestamp);
-                Serial.print((char *)buff);
-            }
-        }
-        Serial.write(13);
-    } else {
+    if (settings.enableLawicel && SysSettings.lawicelMode) 
+    {
+        lawicel.sendFrameToBuffer(frame, whichBus);
+    } 
+    else 
+    {
         if (SysSettings.isWifiActive) wifiGVRET.sendFrameToBuffer(frame, whichBus);
         else serialGVRET.sendFrameToBuffer(frame, whichBus);
     }
@@ -108,5 +74,8 @@ void CANManager::loop()
         addBits(0, incoming);
         toggleRXLED();
         outputFrame(incoming, 0);
+        wifiLength = wifiGVRET.numAvailableBytes();
+        serialLength = serialGVRET.numAvailableBytes();
+        maxLength = (wifiLength > serialLength) ? wifiLength:serialLength;
     }
 }

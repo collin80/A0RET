@@ -39,6 +39,7 @@ This code is now all specialized for the A0 and its ESP32 WRover-B which has 4MB
 #include "wifi.h"
 #include "gvret_comm.h"
 #include "can_manager.h"
+#include "lawicel.h"
 
 byte i = 0;
 
@@ -58,6 +59,7 @@ WiFiManager wifiManager;
 GVRET_Comm_Handler serialGVRET; //gvret protocol over the serial to USB connection
 GVRET_Comm_Handler wifiGVRET; //GVRET over the wifi telnet port
 CANManager canManager; //keeps track of bus load and abstracts away some details of how things are done
+LAWICELHandler lawicel;
 
 SerialConsole console;
 
@@ -74,8 +76,9 @@ void loadSettings()
     settings.CAN0ListenOnly = nvPrefs.getBool("can0-listenonly", false);
     settings.useBinarySerialComm = nvPrefs.getBool("binarycomm", false);
     settings.logLevel = nvPrefs.getUChar("loglevel", 1); //info
-    settings.wifiMode = nvPrefs.getUChar("wifiMode", 0); //Wifi defaults to being off
+    settings.wifiMode = nvPrefs.getUChar("wifiMode", 2); //Wifi defaults to creating an AP
     settings.enableBT = nvPrefs.getBool("enable-bt", false);
+    settings.enableLawicel = nvPrefs.getBool("enableLawicel", true);
     if (nvPrefs.getString("SSID", settings.SSID, 32) == 0)
     {
         strcpy(settings.SSID, "ESP32DUE");
