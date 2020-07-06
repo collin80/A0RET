@@ -16,6 +16,4 @@ private:
     void uppercaseToken(char *token);
     void printBusName(int bus);
     bool parseLawicelCANCmd(CAN_FRAME &frame);
-    unsigned int parseHexCharacter(char chr);
-    unsigned int parseHexString(char *str, int length);
 };

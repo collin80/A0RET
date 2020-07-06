@@ -195,7 +195,7 @@ void sendMarkTriggered(int which)
     frame.extended = true;
     frame.length = 0;
     frame.rtr = 0;
-    canManager.outputFrame(frame, 0);
+    canManager.displayFrame(frame, 0);
 }
 
 /*

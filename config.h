@@ -117,6 +117,7 @@ class GVRET_Comm_Handler;
 class SerialConsole;
 class CANManager;
 class LAWICELHandler;
+class ELM327Emu;
 
 extern EEPROMSettings settings;
 extern SystemSettings SysSettings;
@@ -126,5 +127,6 @@ extern GVRET_Comm_Handler wifiGVRET;
 extern SerialConsole console;
 extern CANManager canManager;
 extern LAWICELHandler lawicel;
+extern ELM327Emu elmEmulator;
 
 #endif /* CONFIG_H_ */

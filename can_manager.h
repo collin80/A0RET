@@ -15,7 +15,7 @@ public:
     CANManager();
     void addBits(int offset, CAN_FRAME &frame);
     void sendFrame(CAN_COMMON *bus, CAN_FRAME &frame);
-    void outputFrame(CAN_FRAME &frame, int whichBus);
+    void displayFrame(CAN_FRAME &frame, int whichBus);
     void loop();
     void setup();
 

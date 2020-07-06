@@ -53,6 +53,8 @@ AT RV (adapter voltage) - Send something like 14.4V
 #include <Arduino.h>
 #include "BluetoothSerial.h"
 
+class CAN_FRAME;
+
 class ELM327Emu {
 public:
 
@@ -61,6 +63,7 @@ public:
     void handleTick(); //periodic processes
     void loop();
     void sendCmd(String cmd);
+    void processCANReply(CAN_FRAME &frame);
 
 private:
     BluetoothSerial serialBT;
@@ -68,15 +71,13 @@ private:
     char buffer[30]; // a buffer for various string conversions
     bool bLineFeed; //should we use line feeds?
     bool bHeader; //should we produce a header?
+    uint32_t ecuAddress;
     int tickCounter;
     int ibWritePtr;
     int currReply;
 
     void processCmd();
-    String processELMCmd(char *cmd);
-    bool processRequest(uint8_t mode, uint8_t pid, char *inData, char *outData);
-    bool processShowData(uint8_t pid, char *inData, char *outData);
-    bool processShowCustomData(uint16_t pid, char *inData, char *outData);    
+    String processELMCmd(char *cmd);    
 };
 
 #endif

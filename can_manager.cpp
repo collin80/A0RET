@@ -5,6 +5,7 @@
 #include "SerialConsole.h"
 #include "gvret_comm.h"
 #include "lawicel.h"
+#include "ELM327_Emulator.h"
 
 CANManager::CANManager()
 {
@@ -35,7 +36,7 @@ void CANManager::sendFrame(CAN_COMMON *bus, CAN_FRAME &frame)
     addBits(whichBus, frame);
 }
 
-void CANManager::outputFrame(CAN_FRAME &frame, int whichBus)
+void CANManager::displayFrame(CAN_FRAME &frame, int whichBus)
 {
     if (settings.enableLawicel && SysSettings.lawicelMode) 
     {
@@ -73,7 +74,8 @@ void CANManager::loop()
         CAN0.read(incoming);
         addBits(0, incoming);
         toggleRXLED();
-        outputFrame(incoming, 0);
+        displayFrame(incoming, 0);
+        if (incoming.id > 0x7DF && incoming.id < 0x7F0) elmEmulator.processCANReply(incoming);
         wifiLength = wifiGVRET.numAvailableBytes();
         serialLength = serialGVRET.numAvailableBytes();
         maxLength = (wifiLength > serialLength) ? wifiLength:serialLength;

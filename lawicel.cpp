@@ -5,6 +5,7 @@ Implements the lawicel protocol.
 #include "lawicel.h"
 #include "config.h"
 #include <esp32_can.h>
+#include "utility.h"
 
 void LAWICELHandler::handleShortCmd(char cmd)
 {
@@ -82,25 +83,25 @@ void LAWICELHandler::handleLongCmd(char *buffer)
 
     switch (buffer[0]) {
     case 't': //transmit standard frame
-        outFrame.id = parseHexString(buffer + 1, 3);
+        outFrame.id = Utility::parseHexString(buffer + 1, 3);
         outFrame.length = buffer[4] - '0';
         outFrame.extended = false;
         if (outFrame.length < 0) outFrame.length = 0;
         if (outFrame.length > 8) outFrame.length = 8;
         for (int data = 0; data < outFrame.length; data++) {
-            outFrame.data.bytes[data] = parseHexString(buffer + 5 + (2 * data), 2);
+            outFrame.data.bytes[data] = Utility::parseHexString(buffer + 5 + (2 * data), 2);
         }
         CAN0.sendFrame(outFrame);
         if (SysSettings.lawicelAutoPoll) Serial.print("z");
         break;
     case 'T': //transmit extended frame
-        outFrame.id = parseHexString(buffer + 1, 8);
+        outFrame.id = Utility::parseHexString(buffer + 1, 8);
         outFrame.length = buffer[9] - '0';
         outFrame.extended = false;
         if (outFrame.length < 0) outFrame.length = 0;
         if (outFrame.length > 8) outFrame.length = 8;
         for (int data = 0; data < outFrame.length; data++) {
-            outFrame.data.bytes[data] = parseHexString(buffer + 10 + (2 * data), 2);
+            outFrame.data.bytes[data] = Utility::parseHexString(buffer + 10 + (2 * data), 2);
         }
         CAN0.sendFrame(outFrame);
         if (SysSettings.lawicelAutoPoll) Serial.print("Z");
@@ -108,7 +109,7 @@ void LAWICELHandler::handleLongCmd(char *buffer)
     case 'S': 
         if (!SysSettings.lawicellExtendedMode) {
             //setup canbus baud via predefined speeds
-            val = parseHexCharacter(buffer[1]);
+            val = Utility::parseHexCharacter(buffer[1]);
             switch (val) {
             case 0:
                 settings.CAN0Speed = 10000;
@@ -272,23 +273,6 @@ bool LAWICELHandler::parseLawicelCANCmd(CAN_FRAME &frame) {
     frame.length = dataLen;
         
     return true;
-}
-
-unsigned int LAWICELHandler::parseHexCharacter(char chr)
-{
-    unsigned int result = 0;
-    if (chr >= '0' && chr <= '9') result = chr - '0';
-    else if (chr >= 'A' && chr <= 'F') result = 10 + chr - 'A';
-    else if (chr >= 'a' && chr <= 'f') result = 10 + chr - 'a';
-
-    return result;
-}
-
-unsigned int LAWICELHandler::parseHexString(char *str, int length)
-{
-    unsigned int result = 0;
-    for (int i = 0; i < length; i++) result += parseHexCharacter(str[i]) << (4 * (length - i - 1));
-    return result;
 }
 
 void LAWICELHandler::sendFrameToBuffer(CAN_FRAME &frame, int whichBus)

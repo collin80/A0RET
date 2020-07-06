@@ -381,7 +381,7 @@ void GVRET_Comm_Handler::processIncomingByte(uint8_t in_byte)
                     //{
                     toggleRXLED();
                     //if(isConnected) {
-                    canManager.outputFrame(build_out_frame, 0);
+                    canManager.displayFrame(build_out_frame, 0);
                     //}
                     //}
                 }
