@@ -14,9 +14,57 @@ CANManager::CANManager()
 
 void CANManager::setup()
 {
-    busLoad[0].bitsSoFar = 0;
-    busLoad[0].busloadPercentage = 0;
+    if (settings.CAN0_Enabled)
+    {
+        if (settings.systemType == 0) CAN0.setCANPins(GPIO_NUM_4, GPIO_NUM_5);
+        CAN0.enable();
+        CAN0.begin(settings.CAN0Speed, 255);
+        Serial.print("Enabled CAN0 with speed ");
+        Serial.println(settings.CAN0Speed);
+        if (settings.CAN0ListenOnly) 
+        {
+            CAN0.setListenOnlyMode(true);
+        } 
+        else 
+        {
+            CAN0.setListenOnlyMode(false);
+        }
+        CAN0.watchFor();
+    } 
+    else
+    {
+        CAN0.disable();
+    }
+
+    if (settings.CAN1_Enabled && settings.systemType != 0) {
+        CAN1.enable();
+        CAN1.begin(settings.CAN1Speed, 255);
+        Serial.print("Enabled CAN1 with speed ");
+        Serial.println(settings.CAN1Speed);
+        if (settings.CAN1ListenOnly)
+        {
+            CAN1.setListenOnlyMode(true);
+        }
+        else
+        {
+            CAN1.setListenOnlyMode(false);
+        }
+        CAN1.watchFor();
+    } 
+    else
+    {
+        CAN1.disable();
+    }
+
     busLoad[0].bitsPerQuarter = settings.CAN0Speed / 4;
+    busLoad[1].bitsPerQuarter = settings.CAN1Speed / 4;
+
+    for (int j = 0; j < NUM_BUSES; j++)
+    {
+        busLoad[j].bitsSoFar = 0;
+        busLoad[j].busloadPercentage = 0;
+        if (busLoad[j].bitsPerQuarter == 0) busLoad[j].bitsPerQuarter = 125000;
+    }
 
     busLoadTimer = millis();
 }
@@ -24,14 +72,16 @@ void CANManager::setup()
 void CANManager::addBits(int offset, CAN_FRAME &frame)
 {
     if (offset < 0) return;
-    if (offset > 0) return;
+    if (offset >= NUM_BUSES) return;
     busLoad[offset].bitsSoFar += 41 + (frame.length * 9);
     if (frame.extended) busLoad[offset].bitsSoFar += 18;
 }
 
 void CANManager::sendFrame(CAN_COMMON *bus, CAN_FRAME &frame)
 {
-    int whichBus = 0;
+    int whichBus;
+    if (bus == &CAN0) whichBus = 0;
+    if (bus == &CAN1) whichBus = 1;
     bus->sendFrame(frame);
     addBits(whichBus, frame);
 }
@@ -70,7 +120,8 @@ void CANManager::loop()
         }
     }
 
-    while (CAN0.available() > 0 && (maxLength < (WIFI_BUFF_SIZE - 80))) {
+    while (CAN0.available() > 0 && (maxLength < (WIFI_BUFF_SIZE - 80)))
+    {
         CAN0.read(incoming);
         addBits(0, incoming);
         toggleRXLED();
@@ -79,5 +130,20 @@ void CANManager::loop()
         wifiLength = wifiGVRET.numAvailableBytes();
         serialLength = serialGVRET.numAvailableBytes();
         maxLength = (wifiLength > serialLength) ? wifiLength:serialLength;
+    }
+
+    if (settings.systemType != 0)
+    {
+        while (CAN1.available() > 0 && (maxLength < (WIFI_BUFF_SIZE - 80)))
+        {
+            CAN1.read(incoming);
+            addBits(1, incoming);
+            toggleRXLED();
+            displayFrame(incoming, 1);
+            if (incoming.id > 0x7DF && incoming.id < 0x7F0) elmEmulator.processCANReply(incoming);
+            wifiLength = wifiGVRET.numAvailableBytes();
+            serialLength = serialGVRET.numAvailableBytes();
+            maxLength = (wifiLength > serialLength) ? wifiLength:serialLength;
+        }
     }
 }

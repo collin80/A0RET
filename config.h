@@ -50,7 +50,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #define CFG_BUILD_NUM   616
 #define CFG_VERSION "A0RET Alpha June 20 2020"
-#define EEPROM_VER      0x21
 #define PREF_NAME   "A0RET"
 
 #define MARK_LIMIT  6   //# of our analog input pins to use for marking. Defaults to all of them. Send voltage to pin to trigger it
@@ -59,7 +58,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define NUM_DIGITAL 6   // Not currently using digital pins on the ESP32
 #define NUM_OUTPUT  6   // Ditto
 
-#define NUM_BUSES   1   //number of buses possible on this hardware - CAN0
+#define NUM_BUSES   2   //max # of buses supported by any of the supported boards
 
 //It's not even used on this hardware currently. But, slows down the blinks to make them more visible
 #define BLINK_SLOWNESS  100 
@@ -77,12 +76,17 @@ struct FILTER {  //should be 10 bytes
 struct EEPROMSettings {
     uint32_t CAN0Speed;
     boolean CAN0_Enabled;
+    boolean CAN0ListenOnly; //if true we don't allow any messing with the bus but rather just passively monitor.
+
+    uint32_t CAN1Speed;
+    boolean CAN1_Enabled;
+    boolean CAN1ListenOnly;
 
     boolean useBinarySerialComm; //use a binary protocol on the serial link or human readable format?
 
     uint8_t logLevel; //Level of logging to output on serial line
-    boolean CAN0ListenOnly; //if true we don't allow any messing with the bus but rather just passively monitor.
-
+    uint8_t systemType; //0 = A0RET, 1 = EVTV ESP32 Board, maybe others in the future
+    
     boolean enableBT; //are we enabling bluetooth too?
     char btName[32];
 

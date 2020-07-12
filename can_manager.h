@@ -1,4 +1,5 @@
 #pragma once
+#include "config.h"
 
 typedef struct {
     uint32_t bitsPerQuarter;
@@ -20,6 +21,6 @@ public:
     void setup();
 
 private:
-    BUSLOAD busLoad[1];
+    BUSLOAD busLoad[NUM_BUSES];
     uint32_t busLoadTimer;
 };

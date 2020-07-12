@@ -69,6 +69,7 @@ void SerialConsole::printMenu()
     Serial.println("Config Commands (enter command=newvalue). Current values shown in parenthesis:");
     Serial.println();
 
+    Logger::console("SYSTYPE=%i - Set board type (0 = Macchina A0, 1 = EVTV ESP32 Board", settings.systemType);
     Logger::console("LOGLEVEL=%i - set log level (0=debug, 1=info, 2=warn, 3=error, 4=off)", settings.logLevel);
     Serial.println();
 
@@ -82,7 +83,22 @@ void SerialConsole::printMenu()
     }*/
     Serial.println();
 
+    if (settings.systemType != 0)
+    {
+        Logger::console("CAN1EN=%i - Enable/Disable CAN0 (0 = Disable, 1 = Enable)", settings.CAN1_Enabled);
+        Logger::console("CAN1SPEED=%i - Set speed of CAN0 in baud (125000, 250000, etc)", settings.CAN1Speed);
+        Logger::console("CAN1LISTENONLY=%i - Enable/Disable Listen Only Mode (0 = Dis, 1 = En)", settings.CAN1ListenOnly);
+        /*for (int i = 0; i < 8; i++) {
+            sprintf(buff, "CAN0FILTER%i=0x%%x,0x%%x,%%i,%%i (ID, Mask, Extended, Enabled)", i);
+            Logger::console(buff, settings.CAN0Filters[i].id, settings.CAN0Filters[i].mask,
+                        settings.CAN0Filters[i].extended, settings.CAN0Filters[i].enabled);
+        }*/
+        Serial.println();
+    }
+
     Logger::console("CAN0SEND=ID,LEN,<BYTES SEPARATED BY COMMAS> - Ex: CAN0SEND=0x200,4,1,2,3,4");
+    if (settings.systemType !=0)
+        Logger::console("CAN1SEND=ID,LEN,<BYTES SEPARATED BY COMMAS> - Ex: CAN1SEND=0x200,4,1,2,3,4");
     Logger::console("MARK=<Description of what you are doing> - Set a mark in the log file about what you are about to do.");
     Serial.println();
 
@@ -222,6 +238,37 @@ void SerialConsole::handleConfigCmd()
             }
             writeEEPROM = true;
         } else Logger::console("Invalid setting! Enter a value 0 - 1");
+    } else if (cmdString == String("CAN1EN")) {
+        if (newValue < 0) newValue = 0;
+        if (newValue > 1) newValue = 1;
+        Logger::console("Setting CAN1 Enabled to %i", newValue);
+        settings.CAN1_Enabled = newValue;
+        if (newValue == 1 && settings.systemType != 0) 
+        {
+            //CAN0.enable();
+            CAN1.begin(settings.CAN0Speed, 255);
+            CAN1.watchFor();
+        }
+        else CAN1.disable();
+        writeEEPROM = true;
+    } else if (cmdString == String("CAN1SPEED")) {
+        if (newValue > 0 && newValue <= 1000000) {
+            Logger::console("Setting CAN1 Baud Rate to %i", newValue);
+            settings.CAN1Speed = newValue;
+            if (settings.CAN1_Enabled) CAN1.begin(settings.CAN1Speed, 255);
+            writeEEPROM = true;
+        } else Logger::console("Invalid baud rate! Enter a value 1 - 1000000");
+    } else if (cmdString == String("CAN1LISTENONLY")) {
+        if (newValue >= 0 && newValue <= 1) {
+            Logger::console("Setting CAN1 Listen Only to %i", newValue);
+            settings.CAN1ListenOnly = newValue;
+            if (settings.CAN1ListenOnly) {
+                CAN1.setListenOnlyMode(true);
+            } else {
+                CAN1.setListenOnlyMode(false);
+            }
+            writeEEPROM = true;
+        } else Logger::console("Invalid setting! Enter a value 0 - 1");
     } else if (cmdString == String("CAN0FILTER0")) { //someone should kick me in the face for this laziness... FIX THIS!
         handleFilterSet(0, 0, newString);
     } else if (cmdString == String("CAN0FILTER1")) {
@@ -256,6 +303,8 @@ void SerialConsole::handleConfigCmd()
         if (handleFilterSet(1, 7, newString)) writeEEPROM = true;
     } else if (cmdString == String("CAN0SEND")) {
         handleCANSend(CAN0, newString);
+    } else if (cmdString == String("CAN1SEND")) {
+        handleCANSend(CAN1, newString);
     } else if (cmdString == String("MARK")) { //just ascii based for now
         if (!settings.useBinarySerialComm) Logger::console("Mark: %s", newString);
     } else if (cmdString == String("BINSERIAL")) {
@@ -295,6 +344,13 @@ void SerialConsole::handleConfigCmd()
     } else if (cmdString == String("WPA2KEY")) {
         Logger::console("Setting WPA2 Key to %s", newString);
         strcpy((char *)settings.WPA2Key, newString);
+        writeEEPROM = true;
+    } else if (cmdString == String("SYSTYPE")) {
+        if (newValue < 0) newValue = 0;
+        if (newValue > 1) newValue = 1;
+        if (newValue == 0) Logger::console("Setting board type to Macchina A0");
+        if (newValue == 1) Logger::console("Setting board type to EVTV ESP32");
+        settings.systemType = newValue;
         writeEEPROM = true;
     } else if (cmdString == String("LOGLEVEL")) {
         switch (newValue) {
@@ -338,10 +394,14 @@ void SerialConsole::handleConfigCmd()
         nvPrefs.putUInt("can0speed", settings.CAN0Speed);
         nvPrefs.putBool("can0_en", settings.CAN0_Enabled);
         nvPrefs.putBool("can0-listenonly", settings.CAN0ListenOnly);
+        nvPrefs.putUInt("can1speed", settings.CAN1Speed);
+        nvPrefs.putBool("can1_en", settings.CAN1_Enabled);
+        nvPrefs.putBool("can1-listenonly", settings.CAN1ListenOnly);
         nvPrefs.putBool("binarycomm", settings.useBinarySerialComm);
         nvPrefs.putBool("enable-bt", settings.enableBT);
         nvPrefs.putBool("enableLawicel", settings.enableLawicel);
         nvPrefs.putUChar("loglevel", settings.logLevel);
+        nvPrefs.putUChar("systype", settings.systemType);
         nvPrefs.putUChar("wifiMode", settings.wifiMode);
         nvPrefs.putString("SSID", settings.SSID);
         nvPrefs.putString("wpa2Key", settings.WPA2Key);

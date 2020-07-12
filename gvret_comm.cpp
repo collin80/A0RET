@@ -115,10 +115,10 @@ void GVRET_Comm_Handler::processIncomingByte(uint8_t in_byte)
             transmitBuffer[transmitBufferLength++] = settings.CAN0Speed >> 16;
             transmitBuffer[transmitBufferLength++] = settings.CAN0Speed >> 24;
             transmitBuffer[transmitBufferLength++] = 0;
-            transmitBuffer[transmitBufferLength++] = settings.CAN0Speed; //we don't have a second port so just copy the first one
-            transmitBuffer[transmitBufferLength++] = settings.CAN0Speed >> 8;
-            transmitBuffer[transmitBufferLength++] = settings.CAN0Speed >> 16;
-            transmitBuffer[transmitBufferLength++] = settings.CAN0Speed >> 24;
+            transmitBuffer[transmitBufferLength++] = settings.CAN1Speed;
+            transmitBuffer[transmitBufferLength++] = settings.CAN1Speed >> 8;
+            transmitBuffer[transmitBufferLength++] = settings.CAN1Speed >> 16;
+            transmitBuffer[transmitBufferLength++] = settings.CAN1Speed >> 24;
             state = IDLE;
             break;
         case PROTO_GET_DEV_INFO:
@@ -127,7 +127,7 @@ void GVRET_Comm_Handler::processIncomingByte(uint8_t in_byte)
             transmitBuffer[transmitBufferLength++] = 7;
             transmitBuffer[transmitBufferLength++] = CFG_BUILD_NUM & 0xFF;
             transmitBuffer[transmitBufferLength++] = (CFG_BUILD_NUM >> 8);
-            transmitBuffer[transmitBufferLength++] = EEPROM_VER;
+            transmitBuffer[transmitBufferLength++] = 0x20;
             transmitBuffer[transmitBufferLength++] = 0;
             transmitBuffer[transmitBufferLength++] = 0;
             transmitBuffer[transmitBufferLength++] = 0; //was single wire mode. Should be rethought for this board.
@@ -158,7 +158,7 @@ void GVRET_Comm_Handler::processIncomingByte(uint8_t in_byte)
         case PROTO_GET_NUMBUSES:
             transmitBuffer[transmitBufferLength++] = 0xF1;
             transmitBuffer[transmitBufferLength++] = 12;
-            transmitBuffer[transmitBufferLength++] = 1; //just CAN0 on this hardware
+            transmitBuffer[transmitBufferLength++] = SysSettings.numBuses;
             state = IDLE;
             break;
         case PROTO_GET_EXT_BUSES:
@@ -217,7 +217,8 @@ void GVRET_Comm_Handler::processIncomingByte(uint8_t in_byte)
                 //this would be the checksum byte. Compute and compare.
                 //temp8 = checksumCalc(buff, step);
                 build_out_frame.rtr = 0;
-                canManager.sendFrame(&CAN0, build_out_frame);
+                if (out_bus == 0) canManager.sendFrame(&CAN0, build_out_frame);
+                if (out_bus == 1) canManager.sendFrame(&CAN1, build_out_frame);
             }
             break;
         }
@@ -310,6 +311,44 @@ void GVRET_Comm_Handler::processIncomingByte(uint8_t in_byte)
                 busSpeed = build_int & 0xFFFFF;
                 if(busSpeed > 1000000) busSpeed = 1000000;
 
+                if(build_int > 0 && SysSettings.numBuses > 1)
+                {
+                    if(build_int & 0x80000000ul) //signals that enabled and listen only status are also being passed
+                    {
+                        if(build_int & 0x40000000ul)
+                        {
+                            settings.CAN1_Enabled = true;
+                        } else 
+                        {
+                            settings.CAN1_Enabled = false;
+                        }
+                        if(build_int & 0x20000000ul)
+                        {
+                            settings.CAN1ListenOnly = true;
+                        } else 
+                        {
+                            settings.CAN1ListenOnly = false;
+                        }
+                    } else 
+                    {
+                        //if not using extended status mode then just default to enabling - this was old behavior
+                        settings.CAN1_Enabled = true;
+                    }
+                    //CAN1.set_baudrate(build_int);
+                    settings.CAN1Speed = busSpeed;
+                } else { //disable first canbus
+                    settings.CAN1_Enabled = false;
+                }
+
+                if (settings.CAN1_Enabled)
+                {
+                    CAN1.begin(settings.CAN0Speed, 255);
+                    if (settings.CAN1ListenOnly) CAN1.setListenOnlyMode(true);
+                    else CAN1.setListenOnlyMode(false);
+                    CAN1.watchFor();
+                }
+                else CAN1.disable();
+
                 state = IDLE;
                 //now, write out the new canbus settings to EEPROM
                 //EEPROM.writeBytes(0, &settings, sizeof(settings));
@@ -334,7 +373,7 @@ void GVRET_Comm_Handler::processIncomingByte(uint8_t in_byte)
             state = IDLE;
             break;
         case SET_SYSTYPE:
-            //settings.sysType = in_byte;
+            settings.systemType = in_byte;
             //EEPROM.writeBytes(0, &settings, sizeof(settings));
             //EEPROM.commit();
             //loadSettings();

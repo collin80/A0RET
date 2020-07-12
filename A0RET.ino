@@ -79,9 +79,14 @@ void loadSettings()
     settings.wifiMode = nvPrefs.getUChar("wifiMode", 2); //Wifi defaults to creating an AP
     settings.enableBT = nvPrefs.getBool("enable-bt", false);
     settings.enableLawicel = nvPrefs.getBool("enableLawicel", true);
+    settings.systemType = nvPrefs.getUChar("systype", 0);
+    settings.CAN1Speed = nvPrefs.getUInt("can1speed", 500000);
+    settings.CAN1_Enabled = nvPrefs.getBool("can1_en", false);
+    settings.CAN1ListenOnly = nvPrefs.getBool("can1-listenonly", false);
+
     if (nvPrefs.getString("SSID", settings.SSID, 32) == 0)
     {
-        strcpy(settings.SSID, "ESP32DUE");
+        strcpy(settings.SSID, "ESP32SSID");
     }
 
     if (nvPrefs.getString("wpa2Key", settings.WPA2Key, 64) == 0)
@@ -97,20 +102,42 @@ void loadSettings()
 
     Logger::setLoglevel((Logger::LogLevel)settings.logLevel);
 
-    Logger::console("Running on Macchina A0");
-    SysSettings.LED_CANTX = 255;
-    SysSettings.LED_CANRX = 13;
-    SysSettings.LED_LOGGING = 255;
-    SysSettings.logToggle = false;
-    SysSettings.txToggle = true;
-    SysSettings.rxToggle = true;
-    SysSettings.lawicelAutoPoll = false;
-    SysSettings.lawicelMode = false;
-    SysSettings.lawicellExtendedMode = false;
-    SysSettings.lawicelTimestamping = false;
-    SysSettings.numBuses = 1; //Currently we support CAN0
-    SysSettings.isWifiActive = false;
-    SysSettings.isWifiConnected = false;
+    if (settings.systemType == 0)
+    {
+        Logger::console("Running on Macchina A0");
+        SysSettings.LED_CANTX = 255;
+        SysSettings.LED_CANRX = 13;
+        SysSettings.LED_LOGGING = 255;
+        SysSettings.logToggle = false;
+        SysSettings.txToggle = true;
+        SysSettings.rxToggle = true;
+        SysSettings.lawicelAutoPoll = false;
+        SysSettings.lawicelMode = false;
+        SysSettings.lawicellExtendedMode = false;
+        SysSettings.lawicelTimestamping = false;
+        SysSettings.numBuses = 1; //Currently we support CAN0
+        SysSettings.isWifiActive = false;
+        SysSettings.isWifiConnected = false;
+    }
+
+    if (settings.systemType == 1)
+    {
+        Logger::console("Running on EVTV ESP32 Board");
+        SysSettings.LED_CANTX = 255;
+        SysSettings.LED_CANRX = 255;
+        SysSettings.LED_LOGGING = 255;
+        SysSettings.logToggle = false;
+        SysSettings.txToggle = true;
+        SysSettings.rxToggle = true;
+        SysSettings.lawicelAutoPoll = false;
+        SysSettings.lawicelMode = false;
+        SysSettings.lawicellExtendedMode = false;
+        SysSettings.lawicelTimestamping = false;
+        SysSettings.numBuses = 2;
+        SysSettings.isWifiActive = false;
+        SysSettings.isWifiConnected = false;
+    }
+
     for (int rx = 0; rx < NUM_BUSES; rx++) SysSettings.lawicelBusReception[rx] = true; //default to showing messages on RX 
     //set pin mode for all LEDS
 }
@@ -145,27 +172,6 @@ void setup()
     Serial.print("Build number: ");
     Serial.println(CFG_BUILD_NUM);
 
-    if (settings.CAN0_Enabled) {
-        CAN0.setCANPins(GPIO_NUM_4, GPIO_NUM_5);
-        CAN0.enable();
-        CAN0.begin(settings.CAN0Speed, 255);
-        Serial.print("Enabled CAN0 with speed ");
-        Serial.println(settings.CAN0Speed);
-        if (settings.CAN0ListenOnly) {
-            CAN0.setListenOnlyMode(true);
-        } else {
-            CAN0.setListenOnlyMode(false);
-        }
-    } 
-    else
-    {
-        CAN0.disable();
-    }
-
-    //heap_caps_print_heap_info(MALLOC_CAP_8BIT);
-
-    setPromiscuousMode();
-
     canManager.setup();
 
     SysSettings.lawicelMode = false;
@@ -177,13 +183,7 @@ void setup()
 
     Serial.print("Done with init\n");
 }
-
-void setPromiscuousMode()
-{
-    CAN0.watchFor();
-}
-
-
+ 
 /*
 Send a fake frame out USB and maybe to file to show where the mark was triggered at. The fake frame has bits 31 through 3
 set which can never happen in reality since frames are either 11 or 29 bit IDs. So, this is a sign that it is a mark frame
