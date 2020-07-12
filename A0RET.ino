@@ -146,6 +146,7 @@ void setup()
     Serial.println(CFG_BUILD_NUM);
 
     if (settings.CAN0_Enabled) {
+        CAN0.setCANPins(GPIO_NUM_4, GPIO_NUM_5);
         CAN0.enable();
         CAN0.begin(settings.CAN0Speed, 255);
         Serial.print("Enabled CAN0 with speed ");

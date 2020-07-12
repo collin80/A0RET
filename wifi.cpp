@@ -12,12 +12,26 @@ WiFiManager::WiFiManager()
 
 void WiFiManager::setup()
 {
-    if (settings.wifiMode == 1)
-    {
+    if (settings.wifiMode == 1) //connect to an AP
+    {        
         WiFi.mode(WIFI_STA);
         WiFi.begin((const char *)settings.SSID, (const char *)settings.WPA2Key);
+
+        WiFiEventId_t eventID = WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info) 
+        {
+           Serial.print("WiFi lost connection. Reason: ");
+           Serial.println(info.disconnected.reason);
+           SysSettings.isWifiConnected = false;
+           if (info.disconnected.reason == 202) 
+           {
+              Serial.println("Connection failed, rebooting to fix it.");
+              esp_sleep_enable_timer_wakeup(10);
+              esp_deep_sleep_start();
+              delay(100);
+           }
+        }, WiFiEvent_t::SYSTEM_EVENT_STA_DISCONNECTED);
     }
-    if (settings.wifiMode == 2)
+    if (settings.wifiMode == 2) //BE an AP
     {
         WiFi.mode(WIFI_AP);
         WiFi.softAP((const char *)settings.SSID, (const char *)settings.WPA2Key);
@@ -27,7 +41,7 @@ void WiFiManager::setup()
 void WiFiManager::loop()
 {
     boolean needServerInit = false; 
-    int i;
+    int i;    
 
     if (settings.wifiMode > 0)
     {
