@@ -15,6 +15,7 @@ void WiFiManager::setup()
     if (settings.wifiMode == 1) //connect to an AP
     {        
         WiFi.mode(WIFI_STA);
+        WiFi.setSleep(false); //sleeping could cause delays
         WiFi.begin((const char *)settings.SSID, (const char *)settings.WPA2Key);
 
         WiFiEventId_t eventID = WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info) 
@@ -34,6 +35,7 @@ void WiFiManager::setup()
     if (settings.wifiMode == 2) //BE an AP
     {
         WiFi.mode(WIFI_AP);
+        WiFi.setSleep(false);
         WiFi.softAP((const char *)settings.SSID, (const char *)settings.WPA2Key);
     }
 }
@@ -49,6 +51,7 @@ void WiFiManager::loop()
         {
             if (WiFi.isConnected())
             {
+                WiFi.setSleep(false);
                 Serial.print("Wifi now connected to SSID ");
                 Serial.println((const char *)settings.SSID);
                 Serial.print("IP address: ");

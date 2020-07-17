@@ -46,7 +46,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 //Number of microseconds between hard flushes of the serial buffer (if not in wifi mode) or the wifi buffer (if in wifi mode)
 //This keeps the latency more consistent. Otherwise the buffer could partially fill and never send.
-#define SER_BUFF_FLUSH_INTERVAL 50000
+#define SER_BUFF_FLUSH_INTERVAL 20000
 
 #define CFG_BUILD_NUM   616
 #define CFG_VERSION "A0RET Alpha June 20 2020"
