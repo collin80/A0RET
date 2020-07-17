@@ -1,7 +1,8 @@
 A0RET
 =======
 
-Reverse Engineering Tool running on Macchina A0.
+Reverse Engineering Tool running on ESP32 based hardware. Originally meant for Macchina A0 but also
+has support for EVTV ESP32 Board (which was originally supported by ESP32RET). 
 
 A fork of the ESP32RET project, itself a fork of the M2RET project, 
 itself a fork of the GVRET project.
@@ -16,6 +17,8 @@ You will need the following to be able to compile the run this project:
 
 PLEASE NOTE: The Macchina A0 uses a WRover ESP32 module which includes PSRAM. But, do NOT use the WRover
 board in the Arduino IDE nor try to enable PSRAM. Doing so causes a fatal crash bug.
+
+The EVTV board has no PSRAM anyway.
 
 All libraries belong in %USERPROFILE%\Documents\Arduino\hardware\esp32\libraries (Windows) or ~/Arduino/hardware/esp32/libraries (Linux/Mac).
 
