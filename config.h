@@ -35,6 +35,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <WiFi.h>
 #include <Preferences.h>
 
+// Set CAN TX/RX pins
+#define GPIO_CAN_TX GPIO_NUM_17
+#define GPIO_CAN_RX GPIO_NUM_16
+
 //size to use for buffering writes to USB. On the ESP32 we're actually talking TTL serial to a TTL<->USB chip
 #define SER_BUFF_SIZE       1024
 
@@ -48,8 +52,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //This keeps the latency more consistent. Otherwise the buffer could partially fill and never send.
 #define SER_BUFF_FLUSH_INTERVAL 20000
 
-#define CFG_BUILD_NUM   616
-#define CFG_VERSION "A0RET Alpha June 20 2020"
+#define CFG_BUILD_NUM   620
+#define CFG_VERSION "A0RET Alpha Dec 9, 2024"
 #define PREF_NAME   "A0RET"
 
 #define MARK_LIMIT  6   //# of our analog input pins to use for marking. Defaults to all of them. Send voltage to pin to trigger it

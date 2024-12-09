@@ -1,3 +1,7 @@
+// December 2024 update for esp-arduino core 2.0.17
+// Use partition: Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+// Set CAN TX/RX pins in config.h
+
 /*
  A0RET.ino
 
@@ -36,7 +40,7 @@ This code is now all specialized for the A0 and its ESP32 WRover-B which has 4MB
 #include <Preferences.h>
 #include "ELM327_Emulator.h"
 #include "SerialConsole.h"
-#include "wifi.h"
+#include "wifi_manager.h"
 #include "gvret_comm.h"
 #include "can_manager.h"
 #include "lawicel.h"

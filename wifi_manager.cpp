@@ -1,5 +1,5 @@
 #include "config.h"
-#include "wifi.h"
+#include "wifi_manager.h"
 #include "gvret_comm.h"
 #include "SerialConsole.h"
 
@@ -21,16 +21,16 @@ void WiFiManager::setup()
         WiFiEventId_t eventID = WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info) 
         {
            Serial.print("WiFi lost connection. Reason: ");
-           Serial.println(info.disconnected.reason);
+           Serial.println(info.wifi_sta_disconnected.reason);
            SysSettings.isWifiConnected = false;
-           if (info.disconnected.reason == 202) 
+           if (info.wifi_sta_disconnected.reason == 202) 
            {
               Serial.println("Connection failed, rebooting to fix it.");
               esp_sleep_enable_timer_wakeup(10);
               esp_deep_sleep_start();
               delay(100);
            }
-        }, WiFiEvent_t::SYSTEM_EVENT_STA_DISCONNECTED);
+        }, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
     }
     if (settings.wifiMode == 2) //BE an AP
     {

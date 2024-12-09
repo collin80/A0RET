@@ -16,7 +16,7 @@ void CANManager::setup()
 {
     if (settings.CAN0_Enabled)
     {
-        if (settings.systemType == 0) CAN0.setCANPins(GPIO_NUM_4, GPIO_NUM_5);
+        if (settings.systemType == 0) CAN0.setCANPins(GPIO_CAN_RX, GPIO_CAN_TX);
         CAN0.enable();
         CAN0.begin(settings.CAN0Speed, 255);
         Serial.print("Enabled CAN0 with speed ");
