@@ -1,6 +1,6 @@
-// December 2024 update for esp-arduino core 2.0.17
-// Use partition: Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
-// Set CAN TX/RX pins in config.h
+// December 2024 updated for arduino-esp32 core 2.0.x (Tested on 2.0.16 & 2.0.17)
+// Use partition scheme: Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+// Set CAN TX/RX pins in config.h, lines 39 & 40
 
 /*
  A0RET.ino

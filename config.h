@@ -36,8 +36,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <Preferences.h>
 
 // Set CAN TX/RX pins
-#define GPIO_CAN_TX GPIO_NUM_17
-#define GPIO_CAN_RX GPIO_NUM_16
+#define GPIO_CAN_TX GPIO_NUM_5
+#define GPIO_CAN_RX GPIO_NUM_4
 
 //size to use for buffering writes to USB. On the ESP32 we're actually talking TTL serial to a TTL<->USB chip
 #define SER_BUFF_SIZE       1024
