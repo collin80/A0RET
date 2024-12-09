@@ -11,7 +11,7 @@ itself a fork of the GVRET project.
 
 You will need the following to be able to compile the run this project:
 
-- [Arduino IDE](https://www.arduino.cc/en/Main/Software) Tested on 1.8.13
+- [Arduino IDE](https://www.arduino.cc/en/software) Tested on IDE v2.3.4 with arduino-esp32 core v2.0.17
 - [Arduino-ESP32](https://github.com/espressif/arduino-esp32) - Allows for programming the ESP32 with the Arduino IDE
 - [esp32_can](https://github.com/collin80/esp32_can) - A unified CAN library that supports the built-in CAN plus MCP2515 and MCP2517FD
 
